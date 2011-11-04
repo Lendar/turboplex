@@ -1,3 +1,10 @@
+# these imports just for make my IDE happy.
+# they will be removed on packaging because it crashes plex.
+from py2app.bundletemplate.lib.site import L
+from stubs import Plugin
+from api.networkkit import HTTP
+from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, InputDirectoryItem, PrefsItem
+
 VIDEO_PREFIX = "/video/turbofilm"
 
 NAME = L('Title')
@@ -20,8 +27,8 @@ def Start():
     ##  http://dev.plexapp.com/docs/Bundle.html#the-strings-directory
     Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
 
-    Plugin.AddViewGroup("InfoList", viewMode="InfoList", mediaType="items")
-    Plugin.AddViewGroup("List", viewMode="List", mediaType="items")
+    Plugin.AddViewGroup("InfoList", viewMode="InfoList")
+    Plugin.AddViewGroup("List")
 
     ## set some defaults so that you don't have to
     ## pass these parameters to these object types
@@ -35,6 +42,7 @@ def Start():
     VideoItem.thumb = R(ICON)
     
     HTTP.CacheTime = CACHE_1HOUR
+    HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
 # see:
 #  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs
@@ -43,7 +51,7 @@ def ValidatePrefs():
     p = Prefs['password']
     ## do some checks and return a
     ## message container
-    if( u and p ):
+    if u and p:
         return MessageContainer(
             "Success",
             "User and password provided ok"
