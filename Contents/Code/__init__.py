@@ -1,9 +1,11 @@
 # these imports just for make my IDE happy.
 # they will be removed on packaging because it crashes plex.
-from py2app.bundletemplate.lib.site import L
-from distutils.log import Log
-from stubs import Plugin, HTTP, HTML, JSON
-from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, InputDirectoryItem, PrefsItem
+from py2app.bundletemplate.lib.site import L #tmp
+from distutils.log import Log #tmp
+from stubs import Plugin, HTTP, HTML, JSON #tmp
+from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, InputDirectoryItem, PrefsItem #tmp
+
+from xml.etree.ElementTree import tostring
 import models
 
 VIDEO_PREFIX = "/video/turbofilm"
@@ -37,6 +39,9 @@ def Start():
     HTTP.CacheTime = CACHE_1HOUR
     HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
+    # TODO: just for testing, remove in real use of plugin.
+    HTTP.ClearCache()
+
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
@@ -58,7 +63,7 @@ def Authentificate(user, passwd):
     if authed:
         return True
     req = HTTP.Request(SITE + '/Signin', values={"login": user, "passwd": passwd})
-    if "/My/Messages" not in str(req):
+    if "signinform" in str(req):
         Log("Oooops, wrong pass or no creds")
         return False
     Log("Ok, i'm in!")
@@ -71,7 +76,7 @@ def FetchHTML(url):
     except:
         Log('Need auth or bad html')
         html = None
-    if html is None:
+    if html is None or 'signinform' in tostring(html):
         f = Authentificate(Prefs['username'], Prefs['password'])
         if not f:
             return None
@@ -111,8 +116,9 @@ def FetchEpisodesList(season_url):
     html = FetchHTML(full_url(season_url))
     if html is None:
         return None
-    for item in html.xpath('/html/body/div/div[2]/div[3]/div[2]/a'):
-        Log(item)
+    htmlEpisodes = html.xpath('//html/body/div/div[2]/div[3]/div[2]/a')
+    Log('Fetched %s episodes for: %s' % (len(htmlEpisodes), season_url))
+    for item in htmlEpisodes:
         episodesList.append(models.Episode(item))
 
     return episodesList
@@ -187,7 +193,6 @@ def AllTVShows(sender):
 
 def VideoMainMenu():
     dir = MediaContainer(viewGroup="InfoList")
-
     if Authentificate(Prefs['username'], Prefs['password']):
         dir.Append(
             Function(
