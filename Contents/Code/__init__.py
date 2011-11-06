@@ -1,40 +1,33 @@
 # these imports just for make my IDE happy.
 # they will be removed on packaging because it crashes plex.
 from py2app.bundletemplate.lib.site import L
-from stubs import Plugin
-from api.networkkit import HTTP
+from distutils.log import Log
+from stubs import Plugin, HTTP, HTML, JSON
 from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, InputDirectoryItem, PrefsItem
+import models
 
 VIDEO_PREFIX = "/video/turbofilm"
 
 NAME = L('Title')
-
-# make sure to replace artwork with what you want
-# these filenames reference the example files in
-# the Contents/Resources/ folder in the bundle
 ART  = 'art-default.jpg'
 ICON = 'icon-default.png'
+SITE = "http://turbofilm.tv"
 
 ####################################################################################################
 
-def Start():
+authed = False
 
-    ## make this plugin show up in the 'Video' section
-    ## in Plex. The L() function pulls the string out of the strings
-    ## file in the Contents/Strings/ folder in the bundle
-    ## see also:
-    ##  http://dev.plexapp.com/docs/mod_Plugin.html
-    ##  http://dev.plexapp.com/docs/Bundle.html#the-strings-directory
+def full_url(url):
+    return SITE + url
+
+def Start():
     Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
 
     Plugin.AddViewGroup("InfoList", viewMode="InfoList")
     Plugin.AddViewGroup("List")
+    Plugin.AddViewGroup("Seasons", viewMode="Seasons")
+    Plugin.AddViewGroup("Episodes", viewMode="Episodes")
 
-    ## set some defaults so that you don't have to
-    ## pass these parameters to these object types
-    ## every single time
-    ## see also:
-    ##  http://dev.plexapp.com/docs/Objects.html
     MediaContainer.title1 = NAME
     MediaContainer.viewGroup = "List"
     MediaContainer.art = R(ART)
@@ -44,8 +37,6 @@ def Start():
     HTTP.CacheTime = CACHE_1HOUR
     HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
-# see:
-#  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
@@ -53,108 +44,174 @@ def ValidatePrefs():
     ## message container
     if u and p:
         return MessageContainer(
-            "Success",
-            "User and password provided ok"
+            L("PrefsSuccess"),
+            L("PrefsSuccessMessage")
         )
     else:
         return MessageContainer(
-            "Error",
-            "You need to provide both a user and password"
+            L("PrefsError"),
+            L("PrefsErrorMessage")
         )
 
-  
+def Authentificate(user, passwd):
+    global authed
+    if authed:
+        return True
+    req = HTTP.Request(SITE + '/Signin', values={"login": user, "passwd": passwd})
+    if "/My/Messages" not in str(req):
+        Log("Oooops, wrong pass or no creds")
+        return False
+    Log("Ok, i'm in!")
+    authed = True
+    return True
+
+def FetchHTML(url):
+    try:
+        html = HTML.ElementFromURL(url)
+    except:
+        Log('Need auth or bad html')
+        html = None
+    if html is None:
+        f = Authentificate(Prefs['username'], Prefs['password'])
+        if not f:
+            return None
+        html = HTML.ElementFromURL(url)
+    return html
+
+def FetchShowsList():
+    """
+    @rtype: Show[]
+    """
+    showsList = []
+    html = FetchHTML(SITE)
+    if html is None:
+        return None
+    for item in html.xpath('//html/body/div/div/div/div/div/a'):
+        show = models.Show(item)
+        showsList.append(show)
+    showsList.sort(lambda x,y: -1 if x.title < y.title else 1)
+    return showsList
 
 
-#### the rest of these are user created functions and
-#### are not reserved by the plugin framework.
-#### see: http://dev.plexapp.com/docs/Functions.html for
-#### a list of reserved functions above
+def FetchSeasonsList(url):
+    seasonsList = []
+    html = FetchHTML(full_url(url))
+    if html is None:
+        return None
+    for item in html.xpath('//html/body/div/div[2]/div[3]/div[@class="seasonnum"]/a'):
+        show = models.Season(item)
+        seasonsList.append(show)
+
+    seasonsList.sort(lambda x,y: -1 if x.title < y.title else 1)
+
+    return seasonsList
+
+def FetchEpisodesList(season_url):
+    episodesList = []
+    html = FetchHTML(full_url(season_url))
+    if html is None:
+        return None
+    for item in html.xpath('/html/body/div/div[2]/div[3]/div[2]/a'):
+        Log(item)
+        episodesList.append(models.Episode(item))
+
+    return episodesList
+
+def Episodes(sender, season_url, season_art):
+    mc = MediaContainer(viewGroup="Episodes")
+    episodes = FetchEpisodesList(season_url)
+
+    if episodes is None:
+        return MessageContainer("Error", "error!")
+
+    for episode in episodes:
+        mc.Append(
+            Function(
+                DirectoryItem(
+                    CallbackExample,
+                    title = episode.title,
+                    thumb = episode.thumb,
+                    art = season_art
+                )
+            )
+        )
+
+    return mc
+
+def AllSeasons(sender, tvshow_url, tvshow_art):
+    mc = MediaContainer(viewGroup="Seasons")
+    seasons = FetchSeasonsList(tvshow_url)
+    
+    if seasons is None:
+        return MessageContainer("Error", "error")
+    for season in seasons:
+        mc.Append(
+            Function(
+                DirectoryItem(
+                    Episodes,
+                    title = season.title,
+                    art = tvshow_art
+                ),
+                season_url = season.url,
+                season_art = tvshow_art
+            )
+        )
+
+    return mc
 
 
+def AllTVShows(sender):
+    mc = MediaContainer(viewGroup="List")
+    shows = FetchShowsList()
+    if shows is None:
+        return MessageContainer("Error", "Can't do that.\nCheck preferences or refill your ballance!")
+    for item in shows:
+        mc.Append(
+            Function(
+                DirectoryItem(
+                    AllSeasons,
+                    title = item.title,
+                    subtitle = item.etitle,
+                    summary = item.info,
+                    thumb = item.thumb,
+                    art = item.art
+                ),
+                tvshow_url = item.url,
+                tvshow_art = item.art
+            )
+        )
+    return mc
 
-#
-# Example main menu referenced in the Start() method
-# for the 'Video' prefix handler
-#
 
 def VideoMainMenu():
-
-    # Container acting sort of like a folder on
-    # a file system containing other things like
-    # "sub-folders", videos, music, etc
-    # see:
-    #  http://dev.plexapp.com/docs/Objects.html#MediaContainer
     dir = MediaContainer(viewGroup="InfoList")
 
-
-    # see:
-    #  http://dev.plexapp.com/docs/Objects.html#DirectoryItem
-    #  http://dev.plexapp.com/docs/Objects.html#function-objects
-    dir.Append(
-        Function(
-            DirectoryItem(
-                CallbackExample,
-                "directory item title",
-                subtitle="subtitle",
-                summary="clicking on me will call CallbackExample",
-                thumb=R(ICON),
-                art=R(ART)
+    if Authentificate(Prefs['username'], Prefs['password']):
+        dir.Append(
+            Function(
+                DirectoryItem(
+                    AllTVShows,
+                    L("TVShowsTitle"),
+                    thumb=R(ICON),
+                    art=R(ART)
+                )
             )
         )
-    )
-  
-    # Part of the "search" example 
-    # see also:
-    #   http://dev.plexapp.com/docs/Objects.html#InputDirectoryItem
-    dir.Append(
-        Function(
-            InputDirectoryItem(
-                SearchResults,
-                "Search title",
-                "Search subtitle",
-                summary="This lets you search stuff",
-                thumb=R(ICON),
-                art=R(ART)
-            )
-        )
-    )
+    else:
+        Log('No auth!')
 
-  
-    # Part of the "preferences" example 
-    # see also:
-    #  http://dev.plexapp.com/docs/Objects.html#PrefsItem
-    #  http://dev.plexapp.com/docs/Functions.html#CreatePrefs
-    #  http://dev.plexapp.com/docs/Functions.html#ValidatePrefs 
     dir.Append(
         PrefsItem(
-            title="Your preferences",
-            subtile="So you can set preferences",
-            summary="lets you set preferences",
+            title=L("Preferences"),
+            summary=L("PreferencesSummary"),
             thumb=R(ICON)
         )
     )
 
-    # ... and then return the container
     return dir
 
 def CallbackExample(sender):
-
-    ## you might want to try making me return a MediaContainer
-    ## containing a list of DirectoryItems to see what happens =)
-
     return MessageContainer(
         "Not implemented",
         "In real life, you'll make more than one callback,\nand you'll do something useful.\nsender.itemTitle=%s" % sender.itemTitle
     )
-
-# Part of the "search" example 
-# query will contain the string that the user entered
-# see also:
-#   http://dev.plexapp.com/docs/Objects.html#InputDirectoryItem
-def SearchResults(sender,query=None):
-    return MessageContainer(
-        "Not implemented",
-        "In real life, you would probably perform some search using python\nand then build a MediaContainer with items\nfor the results"
-    )
-    
-  

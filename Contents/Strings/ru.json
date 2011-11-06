@@ -1,0 +1,15 @@
+{
+    "Title": "Turbofilm",
+    "MusicTitle": "Turbofilm Music",
+    "VideoTitle": "Turbofilm Video",
+    "PhotosTitle": "Turbofilm Photos",
+    "ApplicationsTitle": "Turbofilm Applications",
+    "TVShowsTitle": "Все сериалы",
+
+    "Preferences": "Настройки",
+    "PreferencesSummary": "Пропишите здесь свои имя пользователя и пароль для доступа к турбофильму.",
+    "PrefsSuccess": "Все ОК",
+    "PrefsSuccessMessage": "Теперь все должно работать",
+    "PrefsError": "Ошибка!",
+    "PrefsErrorMessage": "Вы должны ввести логин и пароль"
+}
