@@ -7,3 +7,11 @@ HTTP = HTTP()
 XML = XML()
 HTML = HTML()
 JSON = JSON()
+CACHE_1HOUR = ""
+Prefs = dict()
+
+def R(str):
+    pass
+
+def L(str):
+    pass

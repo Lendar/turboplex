@@ -9,5 +9,6 @@ mkdir -p "$B/"
 cp -r "Contents" "$B/"
 FILE="$I/Code/__init__.py"
 cat "Contents/Code/__init__.py" | sed -e 's/.*#tmp//g' > "$FILE"
+cat "Contents/Code/turbofilm.py" | sed -e 's/.*#tmp//g' > "$I/Code/turbofilm.py"
 
 echo "Done."

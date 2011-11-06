@@ -1,26 +1,21 @@
 # these imports just for make my IDE happy.
 # they will be removed on packaging because it crashes plex.
-from py2app.bundletemplate.lib.site import L #tmp
 from distutils.log import Log #tmp
-from stubs import Plugin, HTTP, HTML, JSON #tmp
-from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, InputDirectoryItem, PrefsItem #tmp
+from stubs import R, Prefs, L, CACHE_1HOUR #tmp
+from stubs import Plugin, HTTP #tmp
+from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, PrefsItem #tmp
 
-from xml.etree.ElementTree import tostring
-import models
+from turbofilm import API
 
 VIDEO_PREFIX = "/video/turbofilm"
 
 NAME = L('Title')
 ART  = 'art-default.jpg'
 ICON = 'icon-default.png'
-SITE = "http://turbofilm.tv"
+
+api = API()
 
 ####################################################################################################
-
-authed = False
-
-def full_url(url):
-    return SITE + url
 
 def Start():
     Plugin.AddPrefixHandler(VIDEO_PREFIX, VideoMainMenu, NAME, ICON, ART)
@@ -45,8 +40,6 @@ def Start():
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
-    ## do some checks and return a
-    ## message container
     if u and p:
         return MessageContainer(
             L("PrefsSuccess"),
@@ -58,74 +51,9 @@ def ValidatePrefs():
             L("PrefsErrorMessage")
         )
 
-def Authentificate(user, passwd):
-    global authed
-    if authed:
-        return True
-    req = HTTP.Request(SITE + '/Signin', values={"login": user, "passwd": passwd})
-    if "signinform" in str(req):
-        Log("Oooops, wrong pass or no creds")
-        return False
-    Log("Ok, i'm in!")
-    authed = True
-    return True
-
-def FetchHTML(url):
-    try:
-        html = HTML.ElementFromURL(url)
-    except:
-        Log('Need auth or bad html')
-        html = None
-    if html is None or 'signinform' in tostring(html):
-        f = Authentificate(Prefs['username'], Prefs['password'])
-        if not f:
-            return None
-        html = HTML.ElementFromURL(url)
-    return html
-
-def FetchShowsList():
-    """
-    @rtype: Show[]
-    """
-    showsList = []
-    html = FetchHTML(SITE)
-    if html is None:
-        return None
-    for item in html.xpath('//html/body/div/div/div/div/div/a'):
-        show = models.Show(item)
-        showsList.append(show)
-    showsList.sort(lambda x,y: -1 if x.title < y.title else 1)
-    return showsList
-
-
-def FetchSeasonsList(url):
-    seasonsList = []
-    html = FetchHTML(full_url(url))
-    if html is None:
-        return None
-    for item in html.xpath('//html/body/div/div[2]/div[3]/div[@class="seasonnum"]/a'):
-        show = models.Season(item)
-        seasonsList.append(show)
-
-    seasonsList.sort(lambda x,y: -1 if x.title < y.title else 1)
-
-    return seasonsList
-
-def FetchEpisodesList(season_url):
-    episodesList = []
-    html = FetchHTML(full_url(season_url))
-    if html is None:
-        return None
-    htmlEpisodes = html.xpath('//html/body/div/div[2]/div[3]/div[2]/a')
-    Log('Fetched %s episodes for: %s' % (len(htmlEpisodes), season_url))
-    for item in htmlEpisodes:
-        episodesList.append(models.Episode(item))
-
-    return episodesList
-
-def Episodes(sender, season_url, season_art):
+def AllEpisodes(sender, season_url, season_art):
     mc = MediaContainer(viewGroup="Episodes")
-    episodes = FetchEpisodesList(season_url)
+    episodes = api.FetchEpisodesList(season_url)
 
     if episodes is None:
         return MessageContainer("Error", "error!")
@@ -146,7 +74,7 @@ def Episodes(sender, season_url, season_art):
 
 def AllSeasons(sender, tvshow_url, tvshow_art):
     mc = MediaContainer(viewGroup="Seasons")
-    seasons = FetchSeasonsList(tvshow_url)
+    seasons = api.FetchSeasonsList(tvshow_url)
     
     if seasons is None:
         return MessageContainer("Error", "error")
@@ -154,10 +82,10 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
         mc.Append(
             Function(
                 DirectoryItem(
-                    Episodes,
+                    AllEpisodes,
                     title = season.title,
                     art = tvshow_art,
-                    leafCount = len(FetchEpisodesList(season.url)),
+                    leafCount = len(api.FetchEpisodesList(season.url)),
                     viewedLeafCount = 0
                 ),
                 season_url = season.url,
@@ -170,7 +98,7 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
 
 def AllTVShows(sender):
     mc = MediaContainer(viewGroup="List")
-    shows = FetchShowsList()
+    shows = api.FetchShowsList()
     if shows is None:
         return MessageContainer("Error", "Can't do that.\nCheck preferences or refill your ballance!")
     for item in shows:
@@ -193,7 +121,7 @@ def AllTVShows(sender):
 
 def VideoMainMenu():
     dir = MediaContainer(viewGroup="InfoList")
-    if Authentificate(Prefs['username'], Prefs['password']):
+    if api.auth(Prefs['username'], Prefs['password']):
         dir.Append(
             Function(
                 DirectoryItem(

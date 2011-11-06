@@ -1,9 +1,5 @@
 import re
-
-# TODO: temporary. remove it.
-SITE = "http://turbofilm.tv"
-def full_url(url):
-    return SITE + url
+from turbofilm import get_url
 
 class Show():
     def __init__(self, htmlItem):
@@ -15,9 +11,9 @@ class Show():
         self.url = htmlItem.get('href')
         self.title = '%s / %s' % (title_en, title_ru)
         self.etitle = "subtitle"
-        self.thumb = full_url('/media/i/series/%s.png' % id)
+        self.thumb = get_url('/media/i/series/%s.png' % id)
         self.info = "info"
-        self.art = full_url('/media/i/series/%sts.jpg' % id)
+        self.art = get_url('/media/i/series/%sts.jpg' % id)
 
 class Season():
     def __init__(self, htmlItem):
@@ -35,4 +31,4 @@ class Episode():
 
         self.title = "%s. %s" % (number, title_en) + ((" / %s" % title_ru) if title_en != title_ru else "")
         self.url = htmlItem.get('href')
-        self.thumb = full_url(htmlItem.xpath("span[@class='sserieslistone']/span[@class='sserieslistoneimg']/img")[0].get('src'))
+        self.thumb = get_url(htmlItem.xpath("span[@class='sserieslistone']/span[@class='sserieslistoneimg']/img")[0].get('src'))
