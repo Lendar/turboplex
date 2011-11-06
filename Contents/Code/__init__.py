@@ -150,10 +150,12 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
                 DirectoryItem(
                     Episodes,
                     title = season.title,
-                    art = tvshow_art
+                    art = tvshow_art,
+                    leafCount = len(FetchEpisodesList(season.url)),
+                    viewedLeafCount = 0
                 ),
                 season_url = season.url,
-                season_art = tvshow_art
+                season_art = tvshow_art,
             )
         )
 
