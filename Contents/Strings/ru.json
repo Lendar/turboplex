@@ -11,5 +11,6 @@
     "PrefsSuccess": "Все ОК",
     "PrefsSuccessMessage": "Теперь все должно работать",
     "PrefsError": "Ошибка!",
-    "PrefsErrorMessage": "Вы должны ввести логин и пароль"
+    "PrefsErrorMessage": "Вы должны ввести логин и пароль",
+    "Clear Cache": "Очистить кэш"
 }

@@ -1,5 +1,5 @@
 import re
-from turbofilm import get_url
+from utils import get_url
 
 class Show():
     def __init__(self, htmlItem):

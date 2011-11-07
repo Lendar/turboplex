@@ -34,9 +34,6 @@ def Start():
     HTTP.CacheTime = CACHE_1HOUR
     HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
-    # TODO: just for testing, remove in real use of plugin.
-    HTTP.ClearCache()
-
 def ValidatePrefs():
     u = Prefs['username']
     p = Prefs['password']
@@ -95,7 +92,6 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
 
     return mc
 
-
 def AllTVShows(sender):
     mc = MediaContainer(viewGroup="List")
     shows = api.FetchShowsList()
@@ -118,6 +114,8 @@ def AllTVShows(sender):
         )
     return mc
 
+def ClearCache(sender):
+    HTTP.ClearCache()
 
 def VideoMainMenu():
     dir = MediaContainer(viewGroup="InfoList")
@@ -140,6 +138,16 @@ def VideoMainMenu():
             title=L("Preferences"),
             summary=L("PreferencesSummary"),
             thumb=R(ICON)
+        )
+    )
+
+    dir.Append(
+        Function(
+            DirectoryItem(
+                ClearCache,
+                title = L("Clear Cache"),
+                thumb = R(ICON)
+            )
         )
     )
 

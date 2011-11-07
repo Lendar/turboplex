@@ -3,12 +3,8 @@ from stubs import Prefs #tmp
 from stubs import HTTP, HTML, JSON #tmp
 
 from models import Show, Episode, Season
+from utils import get_url
 from xml.etree.ElementTree import tostring
-
-SITE = "http://turbofilm.tv"
-
-def get_url(path=""):
-    return SITE + path
 
 class API():
     def __init__(self):
