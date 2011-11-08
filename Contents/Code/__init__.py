@@ -1,19 +1,19 @@
 # these imports just for make my IDE happy.
 # they will be removed on packaging because it crashes plex.
 from distutils.log import Log #tmp
+import timeit
+import time
 from stubs import R, Prefs, L, CACHE_1HOUR #tmp
 from stubs import Plugin, HTTP #tmp
 from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, PrefsItem #tmp
 
-from turbofilm import API
+import turbofilm as api
 
 VIDEO_PREFIX = "/video/turbofilm"
 
 NAME = L('Title')
 ART  = 'art-default.jpg'
 ICON = 'icon-default.png'
-
-api = API()
 
 ####################################################################################################
 
@@ -50,7 +50,7 @@ def ValidatePrefs():
 
 def AllEpisodes(sender, season_url, season_art):
     mc = MediaContainer(viewGroup="Episodes")
-    episodes = api.FetchEpisodesList(season_url)
+    episodes = api.fetch_episodes_list(season_url)
 
     if episodes is None:
         return MessageContainer("Error", "error!")
@@ -71,10 +71,19 @@ def AllEpisodes(sender, season_url, season_art):
 
 def AllSeasons(sender, tvshow_url, tvshow_art):
     mc = MediaContainer(viewGroup="Seasons")
-    seasons = api.FetchSeasonsList(tvshow_url)
+    seasons = api.fetch_seasons_list(tvshow_url)
     
     if seasons is None:
         return MessageContainer("Error", "error")
+    else:
+        episodes_count = {}
+        @parallelize
+        def get_episodes_count_for_season():
+            for season in seasons:
+                @task
+                def get_count(s=season):
+                    episodes_count[s.url] = s.episodes_count()
+
     for season in seasons:
         mc.Append(
             Function(
@@ -82,7 +91,7 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
                     AllEpisodes,
                     title = season.title,
                     art = tvshow_art,
-                    leafCount = len(api.FetchEpisodesList(season.url)),
+                    leafCount = episodes_count[season.url],
                     viewedLeafCount = 0
                 ),
                 season_url = season.url,
@@ -94,7 +103,7 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
 
 def AllTVShows(sender):
     mc = MediaContainer(viewGroup="List")
-    shows = api.FetchShowsList()
+    shows = api.fetch_shows_list()
     if shows is None:
         return MessageContainer("Error", "Can't do that.\nCheck preferences or refill your ballance!")
     for item in shows:
@@ -116,6 +125,10 @@ def AllTVShows(sender):
 
 def ClearCache(sender):
     HTTP.ClearCache()
+    return MessageContainer(
+        L("Done"), 
+        L("Cache cleared")
+    )
 
 def VideoMainMenu():
     dir = MediaContainer(viewGroup="InfoList")

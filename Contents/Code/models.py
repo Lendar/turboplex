@@ -1,4 +1,5 @@
 import re
+import turbofilm as api
 from utils import get_url
 
 class Show():
@@ -22,6 +23,9 @@ class Season():
 
         self.url = url
         self.title = title
+
+    def episodes_count(self):
+        return len(api.fetch_episodes_list(self.url))
 
 class Episode():
     def __init__(self, htmlItem):
