@@ -55,13 +55,13 @@ def fetch_shows_list():
     return showsList
 
 
-def fetch_seasons_list(url):
+def fetch_seasons_list(url, tvshow_tvdb_id):
     seasonsList = []
     html = fetch_html(get_url(url))
     if html is None:
         return None
     for item in html.xpath('//html/body/div/div[2]/div[3]/div[@class="seasonnum"]/a'):
-        show = Season(item)
+        show = Season(item, tvshow_tvdb_id)
         seasonsList.append(show)
 
     return seasonsList

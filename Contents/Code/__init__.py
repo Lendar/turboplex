@@ -37,6 +37,7 @@ def Start():
     HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
 def ValidatePrefs():
+    # TODO: auth and show 'all series' directory item if prefereces changed.
     u = Prefs['username']
     p = Prefs['password']
     if u and p:
@@ -71,9 +72,9 @@ def AllEpisodes(sender, season_url, season_art):
 
     return mc
 
-def AllSeasons(sender, tvshow_url, tvshow_art):
+def AllSeasons(sender, tvshow_tvdb_id, tvshow_url, tvshow_art):
     mc = MediaContainer(viewGroup="Seasons")
-    seasons = api.fetch_seasons_list(tvshow_url)
+    seasons = api.fetch_seasons_list(tvshow_url, tvshow_tvdb_id)
     
     if seasons is None:
         return MessageContainer("Error", "error")
@@ -87,11 +88,13 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
                     episodes_count[s.url] = s.episodes_count()
 
     for season in seasons:
+        Log(season.poster)
         mc.Append(
             Function(
                 DirectoryItem(
                     AllEpisodes,
                     title = season.title,
+                    thumb = season.poster,
                     art = season.poster,
                     leafCount = episodes_count[season.url],
                     viewedLeafCount = 0
@@ -116,9 +119,11 @@ def AllTVShows(sender):
                     title = show.title_ru if (LOCALE == 'ru') else show.title_en,
                     subtitle = show.title_ru if (LOCALE != 'ru') else show.title_en,
                     summary = show.summary,
+                    # TODO: this doesn't works.
                     thumb = show.poster,
                     art = show.art
                 ),
+                tvshow_tvdb_id = show.tvdb_id,
                 tvshow_url = show.url,
                 tvshow_art = show.art
             )

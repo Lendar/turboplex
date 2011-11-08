@@ -27,14 +27,14 @@ class Show():
 #        HTTP.PreCache(self.art, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
 
 class Season():
-    def __init__(self, htmlItem):
+    def __init__(self, htmlItem, tvshow_tvdb_id):
         title = htmlItem.xpath('span')[0].text
         url = htmlItem.get('href')
 
-        self.tvdb_id = 239761
+        self.tvdb_id = tvshow_tvdb_id
         self.url = url
         self.title = title
-        self.poster = "http://thetvdb.com/banners/_cache/seasons/%s-1.jpg" % self.tvdb_id
+        self.poster = "http://thetvdb.com/banners/_cache/seasons/%s-%s-2.jpg" % (self.tvdb_id, re.search('(\d+)', title).group(0))
 
     def episodes_count(self):
         return len(api.fetch_episodes_list(self.url))
