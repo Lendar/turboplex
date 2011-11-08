@@ -72,9 +72,9 @@ def AllEpisodes(sender, season_url, season_art):
 
     return mc
 
-def AllSeasons(sender, tvshow_tvdb_id, tvshow_url, tvshow_art):
+def AllSeasons(sender, tvshow_url, tvshow_art):
     mc = MediaContainer(viewGroup="Seasons")
-    seasons = api.fetch_seasons_list(tvshow_url, tvshow_tvdb_id)
+    seasons = api.fetch_seasons_list(tvshow_url)
     
     if seasons is None:
         return MessageContainer("Error", "error")
@@ -123,7 +123,6 @@ def AllTVShows(sender):
                     thumb = show.poster,
                     art = show.art
                 ),
-                tvshow_tvdb_id = show.tvdb_id,
                 tvshow_url = show.url,
                 tvshow_art = show.art
             )

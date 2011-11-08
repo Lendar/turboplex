@@ -1,4 +1,5 @@
 import re
+import urllib
 import turbofilm as api
 import tvdb
 from utils import get_url
@@ -6,35 +7,38 @@ from utils import get_url
 from distutils.log import Log #tmp
 from stubs import HTTP, CACHE_1HOUR #tmp
 
+TVDBAPI_HOST = "http://tvdbapi.appspot.com"
+#TVDBAPI_HOST = "http://localhost:8080"
+
 class Show():
     def __init__(self, htmlItem):
         title_en = htmlItem.xpath('span/span[3]')[0].text
         title_ru = htmlItem.xpath('span/span[4]')[0].text
         id = re.search('(\d+)', htmlItem.xpath('span/span[1]/img')[0].get('src')).group(0)
-        search_result = tvdb.searchByGuid('en', title_en) # TODO: get current locale
 
-        self.tvdb_id = search_result[0]['guid']
         self.id = id
         self.url = htmlItem.get('href')
         self.title_en = title_en
         self.title_ru = title_ru
-        self.summary = search_result[0]['summary']
-        self.poster = "http://thetvdb.com/banners/_cache/posters/%s-1.jpg" % self.tvdb_id
+        self.summary = ''
+        self.poster = "%s/%s/poster" % (TVDBAPI_HOST, urllib.quote(self.title_en))
         self.info = "info"
-        self.art = "http://thetvdb.com/banners/fanart/original/%s-1.jpg" % self.tvdb_id
+        self.art = "%s/%s/fanart" % (TVDBAPI_HOST, urllib.quote(self.title_en))
 
         # TODO: precache background images
+        Log('CACHING' + self.poster)
+#        HTTP.PreCache(self.poster, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
 #        HTTP.PreCache(self.art, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
 
 class Season():
-    def __init__(self, htmlItem, tvshow_tvdb_id):
+    def __init__(self, htmlItem):
         title = htmlItem.xpath('span')[0].text
         url = htmlItem.get('href')
 
         self.tvdb_id = tvshow_tvdb_id
         self.url = url
         self.title = title
-        self.poster = "http://thetvdb.com/banners/_cache/seasons/%s-%s-2.jpg" % (self.tvdb_id, re.search('(\d+)', title).group(0))
+        self.poster = "http://thetvdb.com/banners/_cache/seasons/11-11-2.jpg"
 
     def episodes_count(self):
         return len(api.fetch_episodes_list(self.url))
