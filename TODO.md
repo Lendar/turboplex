@@ -6,3 +6,17 @@
 - Сделать иконки плагина
 - Локализация текстов
 
+## Мыслишки по поводу своего proxy API
+`/api/%names%/` возвращает список:
+	- show_poster_url
+	- show_summary
+	- show_titles
+	- show_fanart
+`/api/%name%/` возвращает:
+	- seasons_posters
+`/api/%name%/%season%/`:
+	- episodes_info (summary, image)
+
+	
+
+
