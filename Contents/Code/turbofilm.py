@@ -14,6 +14,7 @@ def auth(user, passwd):
         return True
     req = HTTP.Request(get_url('/Signin'), values={"login": user, "passwd": passwd})
     if "signinform" in str(req):
+        Log(str(req))
         Log("Oooops, wrong pass or no creds")
         return False
     Log("Ok, i'm in!")
@@ -41,10 +42,16 @@ def fetch_shows_list():
     html = fetch_html(get_url())
     if html is None:
         return None
-    for item in html.xpath('//html/body/div/div/div/div/div/a'):
-        show = Show(item)
-        showsList.append(show)
-    showsList.sort(lambda x,y: -1 if x.title < y.title else 1)
+    @parallelize
+    def create_shows_list():
+        for item in html.xpath('//html/body/div/div/div/div/div/a'):
+            @task
+            def create_show(i=item):
+                show = Show(i)
+                showsList.append(show)
+
+    showsList.sort(lambda x,y: -1 if x.title_en < y.title_en else 1)
+
     return showsList
 
 
@@ -56,8 +63,6 @@ def fetch_seasons_list(url):
     for item in html.xpath('//html/body/div/div[2]/div[3]/div[@class="seasonnum"]/a'):
         show = Season(item)
         seasonsList.append(show)
-
-    seasonsList.sort(lambda x,y: -1 if x.title < y.title else 1)
 
     return seasonsList
 

@@ -15,6 +15,8 @@ NAME = L('Title')
 ART  = 'art-default.jpg'
 ICON = 'icon-default.png'
 
+LOCALE = Locale.CurrentLocale
+
 ####################################################################################################
 
 def Start():
@@ -90,7 +92,7 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
                 DirectoryItem(
                     AllEpisodes,
                     title = season.title,
-                    art = tvshow_art,
+                    art = season.poster,
                     leafCount = episodes_count[season.url],
                     viewedLeafCount = 0
                 ),
@@ -102,23 +104,23 @@ def AllSeasons(sender, tvshow_url, tvshow_art):
     return mc
 
 def AllTVShows(sender):
-    mc = MediaContainer(viewGroup="List")
+    mc = MediaContainer(viewGroup="InfoList")
     shows = api.fetch_shows_list()
     if shows is None:
         return MessageContainer("Error", "Can't do that.\nCheck preferences or refill your ballance!")
-    for item in shows:
+    for show in shows:
         mc.Append(
             Function(
                 DirectoryItem(
                     AllSeasons,
-                    title = item.title,
-                    subtitle = item.etitle,
-                    summary = item.info,
-                    thumb = item.thumb,
-                    art = item.art
+                    title = show.title_ru if (LOCALE == 'ru') else show.title_en,
+                    subtitle = show.title_ru if (LOCALE != 'ru') else show.title_en,
+                    summary = show.summary,
+                    thumb = show.poster,
+                    art = show.art
                 ),
-                tvshow_url = item.url,
-                tvshow_art = item.art
+                tvshow_url = show.url,
+                tvshow_art = show.art
             )
         )
     return mc

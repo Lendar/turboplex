@@ -1,28 +1,40 @@
 import re
 import turbofilm as api
+import tvdb
 from utils import get_url
+
+from distutils.log import Log #tmp
+from stubs import HTTP, CACHE_1HOUR #tmp
 
 class Show():
     def __init__(self, htmlItem):
         title_en = htmlItem.xpath('span/span[3]')[0].text
         title_ru = htmlItem.xpath('span/span[4]')[0].text
         id = re.search('(\d+)', htmlItem.xpath('span/span[1]/img')[0].get('src')).group(0)
+        search_result = tvdb.searchByGuid('en', title_en) # TODO: get current locale
 
+        self.tvdb_id = search_result[0]['guid']
         self.id = id
         self.url = htmlItem.get('href')
-        self.title = '%s / %s' % (title_en, title_ru)
-        self.etitle = "subtitle"
-        self.thumb = get_url('/media/i/series/%s.png' % id)
+        self.title_en = title_en
+        self.title_ru = title_ru
+        self.summary = search_result[0]['summary']
+        self.poster = "http://thetvdb.com/banners/_cache/posters/%s-1.jpg" % self.tvdb_id
         self.info = "info"
-        self.art = get_url('/media/i/series/%sts.jpg' % id)
+        self.art = "http://thetvdb.com/banners/fanart/original/%s-1.jpg" % self.tvdb_id
+
+        # TODO: precache background images
+#        HTTP.PreCache(self.art, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
 
 class Season():
     def __init__(self, htmlItem):
         title = htmlItem.xpath('span')[0].text
         url = htmlItem.get('href')
 
+        self.tvdb_id = 239761
         self.url = url
         self.title = title
+        self.poster = "http://thetvdb.com/banners/_cache/seasons/%s-1.jpg" % self.tvdb_id
 
     def episodes_count(self):
         return len(api.fetch_episodes_list(self.url))

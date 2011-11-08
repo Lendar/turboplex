@@ -7,8 +7,11 @@ HTTP = HTTP()
 XML = XML()
 HTML = HTML()
 JSON = JSON()
-CACHE_1HOUR = ""
+CACHE_1HOUR = 1
 Prefs = dict()
+TOTAL_TRIES = 10
+MIN_RETRY_TIMEOUT = 1
+BACKUP_TRIES = 2
 
 def R(str):
     pass
