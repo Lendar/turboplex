@@ -1,14 +1,12 @@
 import re
 import urllib
 import turbofilm as api
-import tvdb
 from utils import get_url
 
 from distutils.log import Log #tmp
 from stubs import HTTP, CACHE_1HOUR #tmp
 
 TVDBAPI_HOST = "http://tvdbapi.appspot.com"
-#TVDBAPI_HOST = "http://localhost:8080"
 
 class Show():
     def __init__(self, htmlItem):
@@ -20,7 +18,7 @@ class Show():
         self.url = htmlItem.get('href')
         self.title_en = title_en
         self.title_ru = title_ru
-        self.summary = ''
+        self.summary = HTTP.Request("%s/%s/summary" % (TVDBAPI_HOST, urllib.quote(self.title_en))).content
         self.poster = "%s/%s/poster" % (TVDBAPI_HOST, urllib.quote(self.title_en))
         self.info = "info"
         self.art = "%s/%s/fanart" % (TVDBAPI_HOST, urllib.quote(self.title_en))
@@ -30,7 +28,6 @@ class Season():
         title = htmlItem.xpath('span')[0].text
         url = htmlItem.get('href')
 
-        self.tvdb_id = tvshow_tvdb_id
         self.url = url
         self.title = title
         self.poster = "http://thetvdb.com/banners/_cache/seasons/11-11-2.jpg"

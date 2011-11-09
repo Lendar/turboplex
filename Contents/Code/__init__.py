@@ -117,6 +117,7 @@ def AllTVShows(sender):
                     AllSeasons,
                     title = show.title_ru if (LOCALE == 'ru') else show.title_en,
                     subtitle = show.title_ru if (LOCALE != 'ru') else show.title_en,
+                    # TODO: make async call
                     summary = show.summary,
                     thumb = Callback(Picture, url=show.poster),
                     art = Callback(Picture, url=show.art)
