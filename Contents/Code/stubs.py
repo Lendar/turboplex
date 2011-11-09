@@ -12,6 +12,7 @@ Prefs = dict()
 TOTAL_TRIES = 10
 MIN_RETRY_TIMEOUT = 1
 BACKUP_TRIES = 2
+CACHE_1MONTH = 1
 
 def R(str):
     pass

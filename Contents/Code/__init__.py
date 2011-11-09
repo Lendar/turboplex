@@ -3,10 +3,9 @@
 from distutils.log import Log #tmp
 import timeit
 import time
-from stubs import R, Prefs, L, CACHE_1HOUR #tmp
+from stubs import R, Prefs, L, CACHE_1HOUR, CACHE_1MONTH #tmp
 from stubs import Plugin, HTTP #tmp
-from objects import MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, PrefsItem #tmp
-
+from objects import  DataObject, Redirect, MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, PrefsItem #tmp
 import turbofilm as api
 
 VIDEO_PREFIX = "/video/turbofilm"
@@ -119,9 +118,8 @@ def AllTVShows(sender):
                     title = show.title_ru if (LOCALE == 'ru') else show.title_en,
                     subtitle = show.title_ru if (LOCALE != 'ru') else show.title_en,
                     summary = show.summary,
-                    # TODO: this doesn't works.
-                    thumb = show.poster,
-                    art = show.art
+                    thumb = Callback(Picture, url=show.poster),
+                    art = Callback(Picture, url=show.art)
                 ),
                 tvshow_url = show.url,
                 tvshow_art = show.art
@@ -177,3 +175,13 @@ def CallbackExample(sender):
         "Not implemented",
         "In real life, you'll make more than one callback,\nand you'll do something useful.\nsender.itemTitle=%s" % sender.itemTitle
     )
+
+
+def Picture(url):
+    if url:
+        try:
+            data = HTTP.Request(url, cacheTime=CACHE_1MONTH).content
+            return DataObject(data, 'image/jpeg')
+        except:
+            pass
+    return Redirect(R(ICON))

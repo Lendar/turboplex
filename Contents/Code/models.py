@@ -25,11 +25,6 @@ class Show():
         self.info = "info"
         self.art = "%s/%s/fanart" % (TVDBAPI_HOST, urllib.quote(self.title_en))
 
-        # TODO: precache background images
-        Log('CACHING' + self.poster)
-#        HTTP.PreCache(self.poster, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
-#        HTTP.PreCache(self.art, cacheTime=CACHE_1HOUR * 24 * 10) # 10 days
-
 class Season():
     def __init__(self, htmlItem):
         title = htmlItem.xpath('span')[0].text
