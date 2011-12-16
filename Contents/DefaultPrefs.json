@@ -11,5 +11,19 @@
         "label": "Password",
         "default": "",
         "option": "hidden"
+    },
+    {
+        "id": "quality",
+        "label": "Video quality",
+        "type": "enum",
+        "values": ["default", "hq"],
+        "default": "default"
+    },
+    {
+        "id": "lang",
+        "label": "Language",
+        "type": "enum",
+        "values": ["ru", "en"],
+        "default": "ru"
     }
 ]

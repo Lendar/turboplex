@@ -96,9 +96,9 @@ def fetch_stream(episode_url):
 
     episode_id = metadata.xpath('//movie/eid')[0].text
     cookie = Cookie.SimpleCookie(HTTP.CookiesForURL("http://www.turbofilm.tv"))["IAS_ID"].value
-    source_hash = metadata.xpath('//movie/sources2/default')[0].text # TODO: move to preferences. Example: 8a96c36ca917daa615c0153838e50eec
+    source_hash = metadata.xpath('//movie/sources2/%s' % Prefs["quality"])[0].text # TODO: move to preferences. Example: 8a96c36ca917daa615c0153838e50eec
     position = "0"
-    lang = "ru" # TODO: move to preferences
+    lang = Prefs["lang"]
     b = hashlib.sha1(cookie + str(random.random())).hexdigest()
     a = hashlib.sha1(b + episode_id + "A2DC51DE0F8BC1E9").hexdigest()
 

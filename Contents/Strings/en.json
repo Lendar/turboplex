@@ -5,5 +5,9 @@
     "PhotosTitle": "Turbofilm Photos",
     "ApplicationsTitle": "Turbofilm Applications",
     "TVShowsTitle": "All TV Shows",
-    "PreferencesSummary": "Set your username and password here."
+    "PreferencesSummary": "Set your username and password here.",
+    "hq": "High quality",
+    "default": "Standart quality",
+    "ru": "Русский",
+    "en": "English"
 }

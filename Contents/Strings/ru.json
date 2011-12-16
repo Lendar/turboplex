@@ -12,5 +12,14 @@
     "PrefsSuccessMessage": "Теперь все должно работать",
     "PrefsError": "Ошибка!",
     "PrefsErrorMessage": "Вы должны ввести логин и пароль",
-    "Clear Cache": "Очистить кэш"
+    "Clear Cache": "Очистить кэш",
+
+    "Username": "Имя пользователя",
+    "Password": "Пароль",
+    "Video quality": "Качество видео",
+    "Language": "Язык",
+    "hq": "Высокое качество",
+    "default": "Стандартное качество",
+    "ru": "Русский",
+    "en": "English"
 }
