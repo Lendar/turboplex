@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>author</key>
+	<string>Alexander Chuprin</string>
+	<key>bundlePath</key>
+	<string>/Users/chupa/Library/Application Support/Plex Media Server/Plug-ins/Turbofilm.bundle</string>
+	<key>description</key>
+	<string>Plex plugin for www.turbofilm.tv</string>
+	<key>identifier</key>
+	<string>com.plexapp.plugins.turbofilm</string>
+	<key>name</key>
+	<string>Turbofilm</string>
+	<key>version</key>
+	<string>0.1</string>
+</dict>
+</plist>
