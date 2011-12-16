@@ -1,6 +1,12 @@
+import Cookie
+import base64
 from distutils.log import Log #tmp
+import hashlib
+import random
+import urllib
+import b64
 from stubs import Prefs #tmp
-from stubs import HTTP, HTML, JSON #tmp
+from stubs import HTTP, HTML, XML #tmp
 
 from models import Show, Episode, Season
 from utils import get_url
@@ -77,3 +83,23 @@ def fetch_episodes_list(season_url):
         episodesList.append(Episode(item))
 
     return episodesList
+
+def fetch_stream(episode_url):
+    html = fetch_html(get_url(episode_url))
+    metadata = XML.ElementFromString(
+        b64.decode(
+            urllib.unquote(
+                html.xpath('//html/body/div/div[2]/div/div[2]/input[@id="metadata"]')[0].get('value')
+            )
+        ).replace("utf-16", "utf-8")
+    )
+
+    episode_id = metadata.xpath('//movie/eid')[0].text
+    cookie = Cookie.SimpleCookie(HTTP.CookiesForURL("http://www.turbofilm.tv"))["IAS_ID"].value
+    source_hash = metadata.xpath('//movie/sources2/default')[0].text # TODO: move to preferences. Example: 8a96c36ca917daa615c0153838e50eec
+    position = "0"
+    lang = "ru" # TODO: move to preferences
+    b = hashlib.sha1(cookie + str(random.random())).hexdigest()
+    a = hashlib.sha1(b + episode_id + "A2DC51DE0F8BC1E9").hexdigest()
+
+    return "http://cdn.turbofilm.tv/%s/%s/%s/%s/%s/%s/%s" % (hashlib.sha1(lang).hexdigest(), episode_id, source_hash, position, cookie, b, a)

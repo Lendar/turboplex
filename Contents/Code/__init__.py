@@ -1,8 +1,11 @@
 # these imports just for make my IDE happy.
 # they will be removed on packaging because it crashes plex.
+import Cookie
 from distutils.log import Log #tmp
 import timeit
 import time
+import hashlib
+import random
 from stubs import R, Prefs, L, CACHE_1HOUR, CACHE_1MONTH #tmp
 from stubs import Plugin, HTTP #tmp
 from objects import  DataObject, Redirect, MediaContainer, DirectoryItem, VideoItem, MessageContainer, Function, PrefsItem #tmp
@@ -29,9 +32,10 @@ def Start():
     MediaContainer.title1 = NAME
     MediaContainer.viewGroup = "List"
     MediaContainer.art = R(ART)
+    MediaContainer.userAgent = 'AppleCoreMedia/1.0.0.11C74 (Macintosh; U; Intel Mac OS X 10_7_2; ru_ru)'
     DirectoryItem.thumb = R(ICON)
     VideoItem.thumb = R(ICON)
-    
+
     HTTP.CacheTime = CACHE_1HOUR
     HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
 
@@ -60,19 +64,20 @@ def AllEpisodes(sender, season_url, season_art):
     for episode in episodes:
         mc.Append(
             Function(
-                DirectoryItem(
-                    CallbackExample,
+                VideoItem(
+                    Video,
                     title = episode.title,
                     thumb = episode.thumb,
-                    art = season_art
-                )
+                    art = season_art,
+                ),
+                episode_url = episode.url
             )
         )
 
     return mc
 
 def AllSeasons(sender, tvshow_url, tvshow_art):
-    mc = MediaContainer(viewGroup="Seasons")
+    mc = MediaContainer(viewGroup="List")
     seasons = api.fetch_seasons_list(tvshow_url)
     
     if seasons is None:
@@ -117,7 +122,6 @@ def AllTVShows(sender):
                     AllSeasons,
                     title = show.title_ru if (LOCALE == 'ru') else show.title_en,
                     subtitle = show.title_ru if (LOCALE != 'ru') else show.title_en,
-                    # TODO: make async call
                     summary = show.summary,
                     thumb = Callback(Picture, url=show.poster),
                     art = Callback(Picture, url=show.art)
@@ -171,11 +175,8 @@ def VideoMainMenu():
 
     return dir
 
-def CallbackExample(sender):
-    return MessageContainer(
-        "Not implemented",
-        "In real life, you'll make more than one callback,\nand you'll do something useful.\nsender.itemTitle=%s" % sender.itemTitle
-    )
+def Video(sender, episode_url):
+    return Redirect(api.fetch_stream(episode_url))
 
 
 def Picture(url):

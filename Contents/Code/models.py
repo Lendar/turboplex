@@ -41,6 +41,7 @@ class Episode():
         title_ru = htmlItem.xpath('span/span[2]/span[@class="sserieslistonetxtru"]')[0].text
         title_en = htmlItem.xpath('span/span[2]/span[@class="sserieslistonetxten"]')[0].text
 
+        self.id = 1
         self.title = "%s. %s" % (number, title_en) + ((" / %s" % title_ru) if title_en != title_ru else "")
         self.url = htmlItem.get('href')
-        self.thumb = get_url(htmlItem.xpath("span[@class='sserieslistone']/span[@class='sserieslistoneimg']/img")[0].get('src'))
+        self.thumb = htmlItem.xpath("span[@class='sserieslistone']/span[@class='sserieslistoneimg']/img")[0].get('src')
